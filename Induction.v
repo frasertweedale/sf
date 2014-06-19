@@ -107,7 +107,21 @@ Qed.
 Theorem andb_true_elim2 : forall b c : bool,
   andb b c = true -> c = true.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros b c.
+  destruct c.
+  Case "c = true".
+    reflexivity.
+  Case "c = false".
+    destruct b.
+    SCase "b = true".
+      intros H.
+      rewrite <- H.
+      reflexivity.
+    SCase "c = true".
+      intros H.
+      rewrite <- H.
+      reflexivity.
+  Qed.
 (** [] *)
 
 (** There are no hard and fast rules for how proofs should be
@@ -224,24 +238,49 @@ Proof.
 Theorem mult_0_r : forall n:nat,
   n * 0 = 0.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros n. induction n as [| n'].
+  Case "n = 0".
+    reflexivity.
+  Case "n = S n'".
+    simpl.
+    rewrite -> IHn'.
+    reflexivity.
+  Qed.
+
 
 Theorem plus_n_Sm : forall n m : nat, 
   S (n + m) = n + (S m).
 Proof. 
-  (* FILL IN HERE *) Admitted.
+  intros n m. induction n as [| n'].
+  Case "n = 0".
+    reflexivity.
+  Case "n = S n'".
+    simpl.
+    rewrite -> IHn'.
+    reflexivity.
+  Qed.
 
 
 Theorem plus_comm : forall n m : nat,
   n + m = m + n.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros n m. induction n as [| n'].
+  Case "n = 0".
+    simpl. rewrite -> plus_0_r. reflexivity.
+  Case "n = S n'".
+    simpl. rewrite -> IHn', plus_n_Sm. reflexivity.
+  Qed.
 
 
 Theorem plus_assoc : forall n m p : nat,
   n + (m + p) = (n + m) + p.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros n m p. induction n as [| n'].
+  Case "n = 0".
+    reflexivity.
+  Case "n = S n'".
+    simpl. rewrite IHn'. reflexivity.
+  Qed.
 (** [] *)
 
 (** **** Exercise: 2 stars (double_plus) *)
@@ -258,7 +297,12 @@ Fixpoint double (n:nat) :=
 
 Lemma double_plus : forall n, double n = n + n .
 Proof.  
-  (* FILL IN HERE *) Admitted.
+  intros n. induction n as [| n'].
+  Case "n = 0".
+    reflexivity.
+  Case "n = S n'".
+    simpl. rewrite -> IHn', plus_n_Sm. reflexivity.
+  Qed.
 (** [] *)
 
 
@@ -266,7 +310,10 @@ Proof.
 (** Briefly explain the difference between the tactics
     [destruct] and [induction].  
 
-(* FILL IN HERE *)
+(* The induction tactic, given proofs for P(O) and P(n') -> P(S n')
+   (the "induction hypothesis") for some proposition P, concludes
+   the P(n) holds for all n.  The destruct tactic does not introduce
+   an hypothesis and each case must be proved separately. *)
 
 *)
 (** [] *)
@@ -356,7 +403,11 @@ Proof.
 Theorem plus_swap : forall n m p : nat, 
   n + (m + p) = m + (n + p).
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros n m p.
+  assert (H: n + m = m + n). rewrite -> plus_comm. reflexivity.
+  rewrite -> plus_assoc, plus_assoc, H.
+  reflexivity.
+  Qed.
 
 
 (** Now prove commutativity of multiplication.  (You will probably
@@ -364,10 +415,31 @@ Proof.
     in the proof of this one.)  You may find that [plus_swap] comes in
     handy. *)
 
-Theorem mult_comm : forall m n : nat,
- m * n = n * m.
+Theorem mult_1_r : forall m : nat,
+  m * 1 = m.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros m. induction m as [|m'].
+   reflexivity.
+   simpl. rewrite -> IHm'. reflexivity. Qed.
+
+Theorem mult_Sm_plus : forall n m : nat,
+  m * S n = m + m * n.
+Proof.
+  intros n m. induction n as [|n'].
+    rewrite -> mult_1_r, mult_0_r, plus_0_r. reflexivity.
+    rewrite -> IHn', plus_comm. rewrite <- IHn', plus_comm.
+    simpl.
+  Qed.
+
+Theorem mult_comm : forall m n : nat,
+  m * n = n * m.
+Proof.
+  intros n m.
+  induction n as [|n'].  
+    simpl. rewrite -> mult_0_r. reflexivity.
+    simpl.
+  Abort.
+
 (** [] *)
 
 (** **** Exercise: 2 stars, optional (evenb_n__oddb_Sn) *)
