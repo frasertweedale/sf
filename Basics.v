@@ -231,19 +231,19 @@ Proof. reflexivity.  Qed.
     its inputs are [false]. *)
 
 Definition nandb (b1:bool) (b2:bool) : bool :=
-  (* FILL IN HERE *) admit.
+  negb (andb b1 b2).
 
 (** Remove "[Admitted.]" and fill in each proof with 
     "[Proof. reflexivity. Qed.]" *)
 
 Example test_nandb1:               (nandb true false) = true.
-(* FILL IN HERE *) Admitted.
+Proof. reflexivity. Qed.
 Example test_nandb2:               (nandb false false) = true.
-(* FILL IN HERE *) Admitted.
+Proof. reflexivity. Qed.
 Example test_nandb3:               (nandb false true) = true.
-(* FILL IN HERE *) Admitted.
+Proof. reflexivity. Qed.
 Example test_nandb4:               (nandb true true) = false.
-(* FILL IN HERE *) Admitted.
+Proof. reflexivity. Qed.
 (** [] *)
 
 (** **** Exercise: 1 star (andb3) *)
@@ -252,16 +252,16 @@ Example test_nandb4:               (nandb true true) = false.
     otherwise. *)
 
 Definition andb3 (b1:bool) (b2:bool) (b3:bool) : bool :=
-  (* FILL IN HERE *) admit.
+  andb (andb b1 b2) b3.
 
 Example test_andb31:                 (andb3 true true true) = true.
-(* FILL IN HERE *) Admitted.
+Proof. reflexivity. Qed.
 Example test_andb32:                 (andb3 false true true) = false.
-(* FILL IN HERE *) Admitted.
+Proof. reflexivity. Qed.
 Example test_andb33:                 (andb3 true false true) = false.
-(* FILL IN HERE *) Admitted.
+Proof. reflexivity. Qed.
 Example test_andb34:                 (andb3 true true false) = false.
-(* FILL IN HERE *) Admitted.
+Proof. reflexivity. Qed.
 (** [] *)
 
 (* ###################################################################### *)
@@ -486,12 +486,15 @@ Fixpoint exp (base power : nat) : nat :=
     Translate this into Coq. *)
 
 Fixpoint factorial (n:nat) : nat := 
-(* FILL IN HERE *) admit.
+  match n with
+      | O => S O
+      | S n' => mult (S n') (factorial n')
+  end.
 
 Example test_factorial1:          (factorial 3) = 6.
-(* FILL IN HERE *) Admitted.
+Proof. reflexivity. Qed.
 Example test_factorial2:          (factorial 5) = (mult 10 12).
-(* FILL IN HERE *) Admitted.
+Proof. reflexivity. Qed.
 (** [] *)
 
 (** We can make numerical expressions a little easier to read and
@@ -570,14 +573,14 @@ Proof. reflexivity.  Qed.
     simple, elegant solution for which [simpl] suffices. *)
 
 Definition blt_nat (n m : nat) : bool :=
-  (* FILL IN HERE *) admit.
+  andb (negb (beq_nat n m)) (ble_nat n m).
 
 Example test_blt_nat1:             (blt_nat 2 2) = false.
-(* FILL IN HERE *) Admitted.
+Proof. reflexivity. Qed.
 Example test_blt_nat2:             (blt_nat 2 4) = true.
-(* FILL IN HERE *) Admitted.
+Proof. reflexivity. Qed.
 Example test_blt_nat3:             (blt_nat 4 2) = false.
-(* FILL IN HERE *) Admitted.
+Proof. reflexivity. Qed.
 (** [] *)
 
 (* ###################################################################### *)
@@ -708,7 +711,9 @@ Proof.
 Theorem plus_id_exercise : forall n m o : nat,
   n = m -> m = o -> n + m = m + o.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros n m o H H'.
+  rewrite -> H, H'.
+  reflexivity. Qed.
 (** [] *)
 
 (** As we've seen in earlier examples, the [Admitted] command
@@ -738,7 +743,10 @@ Theorem mult_S_1 : forall n m : nat,
   m = S n -> 
   m * (1 + n) = m * m.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros n m H.
+  rewrite -> plus_1_l, H.
+  reflexivity.
+  Qed.
 (** [] *)
 
 
@@ -824,7 +832,9 @@ Proof.
 Theorem zero_nbeq_plus_1 : forall n : nat,
   beq_nat 0 (n + 1) = false.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros n. destruct n as [|n'].
+    reflexivity.
+    reflexivity. Qed.
 (** [] *)
 
 (* ###################################################################### *)
@@ -839,13 +849,25 @@ Theorem identity_fn_applied_twice :
   (forall (x : bool), f x = x) ->
   forall (b : bool), f (f b) = b.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros f H x.
+  rewrite -> H, H.
+  reflexivity.  Qed.
 
 (** Now state and prove a theorem [negation_fn_applied_twice] similar
     to the previous one but where the second hypothesis says that the
     function [f] has the property that [f x = negb x].*)
 
-(* FILL IN HERE *)
+Theorem negation_fn_applied_twice :
+  forall (f: bool -> bool),
+  (forall (x : bool), f x = negb x) ->
+  forall (b : bool), f (f b) = b.
+Proof.
+  intros f H b.
+  rewrite -> H, H.
+  destruct b.
+    reflexivity.
+    reflexivity.
+  Qed.
 
 (** **** Exercise: 2 stars (andb_eq_orb) *)
 (** Prove the following theorem.  (You may want to first prove a
@@ -857,7 +879,21 @@ Theorem andb_eq_orb :
   (andb b c = orb b c) ->
   b = c.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros b c.
+    destruct b.
+      destruct c.
+        reflexivity.
+        simpl.
+        intros H.
+        rewrite -> H.
+        reflexivity.
+      destruct c.
+        simpl.
+        intros H.
+        rewrite -> H.
+        reflexivity.
+        reflexivity.
+  Qed.
 
 (** **** Exercise: 3 stars (binary) *)
 (** Consider a different, more efficient representation of natural
@@ -894,7 +930,36 @@ Proof.
         converting it to unary and then incrementing. 
 *)
 
-(* FILL IN HERE *)
+Inductive bin : Type :=
+  | Z : bin
+  | Odd : bin -> bin
+  | Even : bin -> bin.
+
+Definition succ_bin (n : bin) : bin :=
+  match n with
+    | Z => Odd Z
+    | Odd n' => Even n'
+    | Even n' => Odd (Even n')
+  end.
+
+Fixpoint bin_to_nat (n : bin) : nat :=
+  match n with
+    | Z => O
+    | Odd n' => S (bin_to_nat n')
+    | Even n' => S (S (bin_to_nat n'))
+  end.
+
+Theorem succ_then_conv_eq_conv_then_succ :
+  forall (n : bin),
+  bin_to_nat (succ_bin n) = S (bin_to_nat n).
+Proof.
+  intros n.
+  destruct n as [|o|e].
+    reflexivity.
+    reflexivity.
+    reflexivity.
+  Qed.
+
 (** [] *)
 
 (* ###################################################################### *)
@@ -960,7 +1025,12 @@ Fixpoint plus' (n : nat) (m : nat) : nat :=
     _does_ terminate on all inputs, but that Coq will _not_ accept
     because of this restriction. *)
 
-(* FILL IN HERE *)
+Fixpoint plus'' (n m : nat) : nat :=
+  match n with
+    | O => m
+    | S n' => S (plus'' m n')
+  end.
+
 (** [] *)
 
 (* $Date: 2013-12-03 07:45:41 -0500 (Tue, 03 Dec 2013) $ *)
