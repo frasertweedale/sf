@@ -1025,11 +1025,13 @@ Fixpoint plus' (n : nat) (m : nat) : nat :=
     _does_ terminate on all inputs, but that Coq will _not_ accept
     because of this restriction. *)
 
+(*
 Fixpoint plus'' (n m : nat) : nat :=
   match n with
     | O => m
     | S n' => S (plus'' m n')
   end.
+*)
 
 (** [] *)
 
