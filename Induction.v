@@ -603,7 +603,7 @@ Proof.
     wanting to change your original definitions to make the property
     easier to prove, feel free to do so.) *)
 
-(* FILL IN HERE *)
+(* Proven for theorem: succ_then_conv_eq_conv_then_succ *)
 (** [] *)
 
 
@@ -632,7 +632,45 @@ Proof.
     here. 
 *)
 
-(* FILL IN HERE *)
+Fixpoint nat_to_bin (n : nat) : bin :=
+  match n with
+    | O => Z
+    | S n' => Odd (nat_to_bin n')
+  end.
+
+Theorem nat_to_bin_to_nat_yield_orig : forall (n : nat),
+  bin_to_nat (nat_to_bin n) = n.
+Proof.
+  intros n. induction n as [|n'].
+    reflexivity.
+    simpl. rewrite -> IHn'. reflexivity.
+  Qed.
+
+(* The inverse cannot be proven as there are many possible
+   bin representations of some numbers.  For example, 2 may
+   be represented as Odd (Odd Z) or Even Z.  Because there
+   is only one possible nat representation of a number,
+   bin_to_nat has a deterministic result, and since nat_to_bin
+   only has one possible representation of each input, the
+   property that converting from bin to nat and back to bin
+   yields the original input does not hold. *)
+
+Fixpoint normalize (n : bin) : bin :=
+  match n with
+    | Z => Z
+    | Odd n' => Odd (normalize n')
+    | Even n' => Odd (Odd (normalize n'))
+  end.
+
+Theorem bin_to_nat_to_bin_yields_normalize : forall n : bin,
+  nat_to_bin (bin_to_nat n) = normalize n.
+Proof.
+  intros n. induction n as [|o|e].
+    reflexivity.
+    simpl. rewrite -> IHo. reflexivity.
+    simpl. rewrite -> IHe. reflexivity.
+  Qed.
+
 (** [] *)
 
 (* ###################################################################### *)
