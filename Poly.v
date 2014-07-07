@@ -762,15 +762,15 @@ Proof. reflexivity.  Qed.
     7. *)
 
 Definition filter_even_gt7 (l : list nat) : list nat :=
-  (* FILL IN HERE *) admit.
+  filter (fun n => andb (evenb n) (ble_nat 7 n)) l.
 
 Example test_filter_even_gt7_1 :
   filter_even_gt7 [1;2;6;9;10;3;12;8] = [10;12;8].
- (* FILL IN HERE *) Admitted.
+Proof. reflexivity. Qed.
 
 Example test_filter_even_gt7_2 :
   filter_even_gt7 [5;2;6;19;129] = [].
- (* FILL IN HERE *) Admitted.
+Proof. reflexivity. Qed.
 (** [] *)
 
 (** **** Exercise: 3 stars (partition) *)
@@ -788,12 +788,12 @@ Example test_filter_even_gt7_2 :
 
 Definition partition {X : Type} (test : X -> bool) (l : list X)
                      : list X * list X :=
-(* FILL IN HERE *) admit.
+(filter test l, filter (fun n => negb (test n)) l).
 
 Example test_partition1: partition oddb [1;2;3;4;5] = ([1;3;5], [2;4]).
-(* FILL IN HERE *) Admitted.
+Proof. reflexivity. Qed.
 Example test_partition2: partition (fun x => false) [5;9;0] = ([], [5;9;0]).
-(* FILL IN HERE *) Admitted.
+Proof. reflexivity. Qed.
 (** [] *)
 
 (* ###################################################### *)
@@ -840,11 +840,21 @@ Proof. reflexivity.  Qed.
 (** Show that [map] and [rev] commute.  You may need to define an
     auxiliary lemma. *)
 
+Theorem map_snoc : forall (X Y : Type) (f : X -> Y) (l : list X) (x : X),
+  map f (snoc l x) = snoc (map f l) (f x).
+Proof.
+  intros X Y f l x. induction l.
+    reflexivity.
+    simpl. rewrite -> IHl. reflexivity.
+  Qed.
 
 Theorem map_rev : forall (X Y : Type) (f : X -> Y) (l : list X),
   map f (rev l) = rev (map f l).
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros X Y f l. induction l.
+    reflexivity.
+    simpl. rewrite -> map_snoc, IHl. reflexivity.
+  Qed.
 (** [] *)
 
 (** **** Exercise: 2 stars (flat_map) *)
@@ -859,12 +869,15 @@ Proof.
 
 Fixpoint flat_map {X Y:Type} (f:X -> list Y) (l:list X)
                    : (list Y) :=
-  (* FILL IN HERE *) admit.
+  match l with
+  | [] => []
+  | x :: xs => f x ++ flat_map f xs
+  end.
 
 Example test_flat_map1:
   flat_map (fun n => [n;n;n]) [1;5;4]
   = [1; 1; 1; 5; 5; 5; 4; 4; 4].
- (* FILL IN HERE *) Admitted.
+Proof. reflexivity. Qed.
 (** [] *)
 
 (** Lists are not the only inductive type that we can write a
@@ -998,7 +1011,7 @@ Proof. reflexivity. Qed.
 Theorem override_example : forall (b:bool),
   (override (constfun b) 3 true) 2 = b.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  reflexivity. Qed.
 (** [] *)
 
 (** We'll use function overriding heavily in parts of the rest of the
@@ -1065,7 +1078,9 @@ Theorem override_neq : forall (X:Type) x1 x2 k1 k2 (f : nat->X),
   beq_nat k2 k1 = false ->
   (override f k2 x2) k1 = x1.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros X x1 x2 k1 k2 f H1 H2.
+  unfold override. rewrite H1, H2. reflexivity.
+  Qed.
 (** [] *)
 
 (** As the inverse of [unfold], Coq also provides a tactic
@@ -1089,7 +1104,12 @@ Proof. reflexivity. Qed.
 
 Theorem fold_length_correct : forall X (l : list X),
   fold_length l = length l.
-(* FILL IN HERE *) Admitted. 
+Proof.
+  intros X l.
+  induction l.
+    reflexivity.
+    simpl. rewrite <- IHl. unfold fold_length. reflexivity.
+  Qed.
 (** [] *)
 
 (** **** Exercise: 3 stars (fold_map) *)
@@ -1097,12 +1117,18 @@ Theorem fold_length_correct : forall X (l : list X),
     below. *)
 
 Definition fold_map {X Y:Type} (f : X -> Y) (l : list X) : list Y :=
-(* FILL IN HERE *) admit.
+  fold (fun x z => f x :: z) l [].
 
 (** Write down a theorem in Coq stating that [fold_map] is correct,
     and prove it. *)
 
-(* FILL IN HERE *)
+Theorem fold_map_correct : forall (X Y : Type) (f : X -> Y) (l : list X),
+  fold_map f l = map f l.
+Proof.
+  intros X Y f l. induction l.
+    reflexivity.
+    simpl. rewrite <- IHl. unfold fold_map. reflexivity.
+  Qed.
 (** [] *)
 
 (* $Date: 2013-09-26 14:40:26 -0400 (Thu, 26 Sep 2013) $ *)
