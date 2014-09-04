@@ -68,7 +68,7 @@ Theorem silly_ex :
      evenb 3 = true ->
      oddb 4 = true.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros H. apply H. Qed.
 (** [] *)
 
 (** To use the [apply] tactic, the (conclusion of the) fact
@@ -107,14 +107,19 @@ Theorem rev_exercise1 : forall (l l' : list nat),
      l = rev l' ->
      l' = rev l.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros l l' H. rewrite H. symmetry. apply rev_involutive.
 (** [] *)
 
 (** **** Exercise: 1 star, optional (apply_rewrite) *)
 (** Briefly explain the difference between the tactics [apply] and
     [rewrite].  Are there situations where both can usefully be
     applied?
-  (* FILL IN HERE *)
+
+  The [apply] tactic performs a rewrite using the argument and
+  performs [reflexivity] in a single step.  Since the the fact
+  being applied must match the goal exactly, the [rewrite]
+  tactic may need to be employed before [apply] can be used.
+
 *)
 (** [] *)
 
@@ -174,7 +179,8 @@ Example trans_eq_exercise : forall (n m o p : nat),
      (n + p) = m ->
      (n + p) = (minustwo o). 
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros n m o p H1 H2.
+  apply trans_eq with m. apply H2. apply H1.  Qed.
 (** [] *)
 
 
@@ -260,7 +266,8 @@ Example sillyex1 : forall (X : Type) (x y z : X) (l j : list X),
      y :: l = x :: j ->
      x = y.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros X x y z l j H1 H2.
+  inversion H2. reflexivity. Qed.
 (** [] *)
 
 Theorem silly6 : forall (n : nat),
@@ -281,7 +288,7 @@ Example sillyex2 : forall (X : Type) (x y z : X) (l j : list X),
      y :: l = z :: j ->
      x = z.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros X x y z l j contra H.  inversion contra.  Qed.
 (** [] *)
 
 (** While the injectivity of constructors allows us to reason
@@ -304,12 +311,12 @@ Proof. intros A B f x y eq. rewrite eq.  reflexivity.  Qed.
 Theorem beq_nat_0_l : forall n,
    beq_nat 0 n = true -> n = 0.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros n H. destruct n. reflexivity. inversion H.  Qed.
 
 Theorem beq_nat_0_r : forall n,
    beq_nat n 0 = true -> n = 0.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros n H. destruct n. reflexivity. inversion H.  Qed.
 (** [] *)
 
 
@@ -373,8 +380,13 @@ Theorem plus_n_n_injective : forall n m,
      n = m.
 Proof.
   intros n. induction n as [| n'].
-    (* Hint: use the plus_n_Sm lemma *)
-    (* FILL IN HERE *) Admitted.
+    (* Hint: use the plus_n_Sm lemma *) 
+    destruct m. reflexivity. intros H. inversion H.
+    destruct m.
+      intros H. inversion H.
+      simpl. rewrite <- plus_n_Sm. rewrite <- plus_n_Sm.
+        intros H. inversion H. apply IHn' in H1. rewrite H1. reflexivity.
+  Qed.
 (** [] *)
 
 (* ###################################################### *)
@@ -520,14 +532,36 @@ Proof.
 Theorem beq_nat_true : forall n m,
     beq_nat n m = true -> n = m.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros n. induction n.
+    intros m eq. destruct m.
+      reflexivity.
+      inversion eq.
+    intros m eq. destruct m.
+      inversion eq.
+      apply f_equal. apply IHn. apply eq.
+  Qed.
 (** [] *)
 
 (** **** Exercise: 2 stars, advanced (beq_nat_true_informal) *)
 (** Give a careful informal proof of [beq_nat_true], being as explicit
     as possible about quantifiers. *)
+(*
+  Consider some n and all m. By induction on m:
 
-(* FILL IN HERE *)
+  - in the base case (n = 0), by destruction of m:
+    - for m = 0, the implied equality holds;
+    - for m = S m', the hypothesis is contradictory.
+
+  - in the inductive case, we must prove that for some n, if
+    beq_nat (S n) m = true (logical equivalence), then S n = m
+    (numerical equivalence). by destruction of m:
+    - for 0, the hypothesis is contradictory;
+    - for S m, i.e. beq_nat (S n) (S m) = true -> S n = S m
+      - by definition of beq_nat, hypothesis simplifies to beq_nat n m -> true
+      - by injectivity of function application, goal becomes n = m
+      - by applying the induction hypothesis, goal now matches equality
+        hypothesis.  Qed.
+*)
 (** [] *)
 
 
@@ -694,7 +728,12 @@ Theorem index_after_last: forall (n : nat) (X : Type) (l : list X),
      length l = n ->
      index n l = None.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros n X l. generalize dependent n. induction l.
+    reflexivity.
+    intros n H. destruct n as [|n'].
+      inversion H.
+      simpl in H. simpl. apply IHl. inversion H. reflexivity.
+  Qed.
 (** [] *)
 
 (** **** Exercise: 3 stars, advanced, optional (index_after_last_informal) *)
@@ -705,7 +744,22 @@ Proof.
       [n], if [length l = n] then [index n l = None].
  
      _Proof_:
-     (* FILL IN HERE *)
+       By induction on l;
+       - if l = [], this follows from the definitions of length and index
+       - if l = x :: xs, we must prove:
+           for all n, length (x :: xs) = n -> index n (x :: xs) = None,
+         using the induction hypothesis:
+           for all n, length xs = n -> index n xs = None
+        
+         by destructing n:
+         - if n = 0, the hypothesis `length (x :: xs) = n` is contradictory
+         - if n = S n':
+           - the hypothesis simplifies to `S (length xs) = S n'`.  By
+             injectivity, `length xs = n'`
+           - the goal `index (S n') (x :: xs) = None` simplifies to
+             `index n' xs = None`
+           - apply the _induction_ hypothesis, the goal becomes `length xs = n'`,
+             which matches the hypothesis.  Qed.
 []
 *)
 
@@ -717,7 +771,12 @@ Theorem length_snoc''' : forall (n : nat) (X : Type)
      length l = n ->
      length (snoc l v) = S n. 
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros n X v l. generalize dependent n. generalize dependent v.
+  induction l as [|x xs].
+    intros v n H. rewrite <- H. reflexivity.
+    intros v n H. simpl. simpl in H. rewrite <- H. apply f_equal.
+      apply IHxs. reflexivity.
+  Qed.
 (** [] *)
 
 (** **** Exercise: 3 stars, optional (app_length_cons) *)
@@ -728,9 +787,14 @@ Theorem app_length_cons : forall (X : Type) (l1 l2 : list X)
      length (l1 ++ (x :: l2)) = n ->
      S (length (l1 ++ l2)) = n.
 Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+  intros X l1. induction l1 as [|h t].
+    simpl. intros l2 x n H. rewrite -> H. reflexivity.
+    simpl. intros l2 x n H. destruct n.
+      inversion H.
+      apply f_equal. apply IHt with x. inversion H. reflexivity.
+Qed.
 
+(** [] *)
 (** **** Exercise: 4 stars, optional (app_length_twice) *)
 (** Prove this by induction on [l], without using app_length. *)
 
@@ -738,7 +802,15 @@ Theorem app_length_twice : forall (X:Type) (n:nat) (l:list X),
      length l = n ->
      length (l ++ l) = n + n.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros X n l. generalize dependent n. induction l as [|h t].
+    simpl. intros n H. rewrite <- H. reflexivity.
+    simpl. intros n H. destruct n.
+      inversion H.
+      inversion H. simpl. apply f_equal. rewrite <- plus_n_Sm.
+        replace (length (t ++ h :: t)) with (S (length (t ++ t))).
+        apply f_equal. apply IHt. reflexivity.
+  apply app_length_cons with h. reflexivity.
+Qed.
 (** [] *)
 
 
