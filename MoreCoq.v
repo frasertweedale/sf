@@ -824,7 +824,15 @@ Theorem double_induction: forall (P : nat -> nat -> Prop),
   (forall m n, P m n -> P (S m) (S n)) ->
   forall m n, P m n.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros P P0 Hm Hn Hmn.
+    induction m.
+      induction n.
+        apply P0.
+        apply Hn. apply IHn.
+      induction n.
+        apply Hm. apply IHm.
+        apply Hmn. apply IHm.
+Qed.
 (** [] *)
 
 
@@ -871,7 +879,12 @@ Proof.
 Theorem override_shadow : forall (X:Type) x1 x2 k1 k2 (f : nat->X),
   (override (override f k1 x2) k1 x1) k2 = (override f k1 x1) k2.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros X x1 x2 k1 k2 f.
+  unfold override.
+  destruct (beq_nat k1 k2).
+    reflexivity.
+    reflexivity.
+Qed.
 (** [] *)
 
 (** **** Exercise: 3 stars, optional (combine_split) *)
@@ -881,8 +894,12 @@ Theorem combine_split : forall X Y (l : list (X * Y)) l1 l2,
   split l = (l1, l2) ->
   combine l1 l2 = l.
 Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+  intros X Y l. induction l.
+    intros l1 l2 H. inversion H. reflexivity.
+    intros l1 l2 H. simpl in H. destruct x. destruct (split l).
+      inversion H.
+      simpl. apply f_equal. apply IHl. reflexivity.
+Qed.
 
 (** Sometimes, doing a [destruct] on a compound expression (a
     non-variable) will erase information we need to complete a proof. *)
