@@ -531,7 +531,7 @@ Proof.
     intution is that [True] should be a proposition for which it is
     trivial to give evidence.) *)
 
-Inductive True : Prop := true.
+Inductive True : Prop := unit.
 (** [] *)
 
 (** However, unlike [False], which we'll use extensively, [True] is
@@ -652,9 +652,8 @@ Definition de_morgan_not_and_not := forall P Q:Prop,
 Definition implies_to_or := forall P Q:Prop, 
   (P->Q) -> (~P\/Q). 
 
-Theorem equiv_peirce_classic : peirce = classic.
-  Admitted.
-  (** [] *)
+(*TODO*)
+(** [] *)
 
 (** **** Exercise: 3 stars (excluded_middle_irrefutable) *)
 (** This theorem implies that it is always safe to add a decidability
@@ -664,7 +663,8 @@ we would have both [~ (P \/ ~P)] and [~ ~ (P \/ ~P)], a contradiction. *)
 
 Theorem excluded_middle_irrefutable:  forall (P:Prop), ~ ~ (P \/ ~ P).  
 Proof.
-  unfold not. apply or_ind.
+  unfold not. intros. apply H. right.
+  intros. apply H. left. apply H0.
 Qed.
 
 
@@ -710,14 +710,18 @@ Theorem false_beq_nat : forall n m : nat,
      n <> m ->
      beq_nat n m = false.
 Proof. 
-  (* FILL IN HERE *) Admitted.
+  unfold not. intros. destruct (beq_nat n m) eqn:Heq.
+  apply ex_falso_quodlibet, H. apply beq_nat_true in Heq. apply Heq.
+  reflexivity.
+Qed.
 (** [] *)
 
 (** **** Exercise: 2 stars, optional (beq_nat_false) *)
 Theorem beq_nat_false : forall n m,
   beq_nat n m = false -> n <> m.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  unfold not. intros. rewrite H0, <- beq_nat_refl in H. inversion H.
+Qed.
 (** [] *)
 
 
