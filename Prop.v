@@ -47,7 +47,9 @@ Inductive ev : nat -> Prop :=
 Theorem double_even : forall n,
   ev (double n).
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros. induction n. apply ev_0.
+  simpl. apply ev_SS in IHn. apply IHn.
+Qed.
 (** [] *)
 
 
@@ -99,7 +101,13 @@ Qed.
 (** Could this proof also be carried out by induction on [n] instead
     of [E]?  If not, why not? *)
 
-(* FILL IN HERE *)
+Theorem ev__even' : forall n,
+                      ev n -> even n.
+Proof.
+  intros. induction n. unfold even. reflexivity.
+  unfold even.
+  Abort.
+
 (** [] *)
 
 (** The induction principle for inductively defined propositions does
@@ -122,7 +130,7 @@ Qed.
    Intuitively, we expect the proof to fail because not every
    number is even. However, what exactly causes the proof to fail?
 
-(* FILL IN HERE *)
+(* We cannot construct the evidence required to complete the proof. *)
 *)
 (** [] *)
 
@@ -132,7 +140,10 @@ Qed.
 Theorem ev_sum : forall n m,
    ev n -> ev m -> ev (n+m).
 Proof. 
-  (* FILL IN HERE *) Admitted.
+  intros. induction H.
+  apply H0.
+  apply ev_SS in IHev. apply IHev.
+Qed.
 (** [] *)
 
 
@@ -212,7 +223,8 @@ Proof.
 (** **** Exercise: 1 star (varieties_of_beauty) *)
 (** How many different ways are there to show that [8] is [beautiful]? *)
 
-(* FILL IN HERE *)
+(* There are infinitely many ways, since 0 is beautiful and can be used
+   in b_sum.  But there are only two irreducible proofs - 3 + 5 and 5 + 3. *)
 (** [] *)
 
 (** *** *)
@@ -273,13 +285,18 @@ Qed.
 (** **** Exercise: 2 stars (b_times2) *)
 Theorem b_times2: forall n, beautiful n -> beautiful (2*n).
 Proof.
-    (* FILL IN HERE *) Admitted.
+  intros. simpl. rewrite plus_0_r.
+  apply b_sum. apply H. apply H.
+Qed.
 (** [] *)
 
 (** **** Exercise: 3 stars (b_timesm) *)
 Theorem b_timesm: forall n m, beautiful n -> beautiful (m*n).
 Proof.
-   (* FILL IN HERE *) Admitted.
+  intros. induction m.
+  apply b_0.
+  simpl. apply b_sum. apply H. apply IHm.
+Qed.
 (** [] *)
 
 
@@ -322,8 +339,20 @@ Inductive gorgeous : nat -> Prop :=
 (** **** Exercise: 1 star (gorgeous_tree) *)
 (** Write out the definition of [gorgeous] numbers using inference rule
     notation.
- 
-(* FILL IN HERE *)
+
+   ----------
+   gorgeous 0
+
+
+   gorgeous n
+----------------
+gorgeous (3 + n)
+
+
+   gorgeous n
+----------------
+gorgeous (5 + n)
+
 []
 *)
 
@@ -332,7 +361,8 @@ Inductive gorgeous : nat -> Prop :=
 Theorem gorgeous_plus13: forall n, 
   gorgeous n -> gorgeous (13+n).
 Proof.
-   (* FILL IN HERE *) Admitted.
+  intros. apply g_plus5, g_plus5, g_plus3, H.
+Qed.
 (** [] *)
 
 (** *** *)
@@ -383,13 +413,22 @@ Abort.
 Theorem gorgeous_sum : forall n m,
   gorgeous n -> gorgeous m -> gorgeous (n + m).
 Proof.
- (* FILL IN HERE *) Admitted.
+  intros. induction H.
+  apply H0.
+  simpl. apply g_plus3, IHgorgeous.
+  simpl. apply g_plus5, IHgorgeous.
+Qed.
 (** [] *)
 
 (** **** Exercise: 3 stars, advanced (beautiful__gorgeous) *)
 Theorem beautiful__gorgeous : forall n, beautiful n -> gorgeous n.
 Proof.
- (* FILL IN HERE *) Admitted.
+  intros. induction H.
+  apply g_0.
+  apply g_plus3, g_0.
+  apply g_plus5, g_0.
+  apply gorgeous_sum. apply IHbeautiful1. apply IHbeautiful2.
+Qed.
 (** [] *)
 
 (** **** Exercise: 3 stars, optional (g_times2) *)
@@ -398,13 +437,17 @@ Proof.
 
 Lemma helper_g_times2 : forall x y z, x + (z + y)= z + x + y.
 Proof.
-   (* FILL IN HERE *) Admitted.
+  intros. rewrite plus_assoc. replace (x + z) with (z + x). reflexivity.
+  apply plus_comm.
+Qed.
 
 Theorem g_times2: forall n, gorgeous n -> gorgeous (2*n).
 Proof.
-   intros n H. simpl. 
-   induction H.
-   (* FILL IN HERE *) Admitted.
+  intros n H. simpl. rewrite plus_0_r. induction H.
+  apply g_0.
+  rewrite helper_g_times2. apply g_plus3, g_plus3, IHgorgeous.
+  rewrite helper_g_times2. apply g_plus5, g_plus5, IHgorgeous.  
+Qed.
 (** [] *)
 
 
@@ -429,7 +472,15 @@ Proof.
 (** **** Exercise: 1 star, optional (ev_minus2_n) *)
 (** What happens if we try to use [destruct] on [n] instead of [inversion] on [E]? *)
 
-(* FILL IN HERE *)
+Theorem ev_minus2_n: forall n,
+  ev n -> ev (pred (pred n)).
+Proof.
+  intros n E.
+  destruct n. apply E.
+  simpl. destruct n. inversion E. simpl.
+  (* Now we still need to inversion E. *)
+  inversion E. apply H0.
+Qed.
 (** [] *)
 
 (** *** *)
@@ -481,7 +532,8 @@ Proof.
 Theorem SSSSev__even : forall n,
   ev (S (S (S (S n)))) -> ev n.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros. inversion H. inversion H1. apply H3.
+Qed.
 
 (** The [inversion] tactic can also be used to derive goals by showing
     the absurdity of a hypothesis. *)
@@ -489,7 +541,7 @@ Proof.
 Theorem even5_nonsense : 
   ev 5 -> 2 + 2 = 9.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros. inversion H. inversion H1. inversion H3.
 (** [] *)
 
 (** **** Exercise: 3 stars, advanced (ev_ev__ev) *)
@@ -499,7 +551,10 @@ Proof.
 Theorem ev_ev__ev : forall n m,
   ev (n+m) -> ev n -> ev m.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros. induction H0.
+  apply H.
+  apply IHev. inversion H. apply H2.
+Qed.
 (** [] *)
 
 (** **** Exercise: 3 stars, optional (ev_plus_plus) *)
@@ -510,7 +565,17 @@ Proof.
 Theorem ev_plus_plus : forall n m p,
   ev (n+m) -> ev (n+p) -> ev (m+p).
 Proof.
-  (* FILL IN HERE *) Admitted.
+  assert (ev_n_n: forall n, ev (n + n)).
+    intros. induction n. apply ev_0.
+    simpl. rewrite <- plus_n_Sm. apply ev_SS in IHn. apply IHn.
+  intros.
+  apply ev_ev__ev with (n + p).
+  replace (n + p + (m + p)) with (n + m + (p + p)).
+  apply ev_sum. apply H. apply ev_n_n.
+  rewrite plus_assoc, helper_g_times2, plus_assoc.
+  replace (m + n) with (n + m). reflexivity. apply plus_comm.
+  apply H0.
+Qed.
 (** [] *)
 
 
@@ -536,18 +601,22 @@ Proof.
     - Prove that 
        forall l, pal l -> l = rev l.
 *)
-
-
-(* FILL IN HERE *)
+Inductive pal {X : Type} : list X -> Prop :=
+  | pal_nil : pal nil
+  | pal_unit : forall x, pal [x]
+  | pal_list : forall x xs, pal xs -> pal (x :: (snoc xs x)).
 (** [] *)
 
 (** **** Exercise: 5 stars, optional (palindrome_converse) *)
 (** Using your definition of [pal] from the previous exercise, prove
     that
      forall l, l = rev l -> pal l.
-*)
-
-(* FILL IN HERE *)
+ *)
+  
+Theorem palindrome_converse : forall (X : Type) (l : list X),
+  l = rev l -> pal l.
+Proof.
+Abort. (* TODO *)
 (** [] *)
 
 (** **** Exercise: 4 stars, advanced (subsequence) *)
